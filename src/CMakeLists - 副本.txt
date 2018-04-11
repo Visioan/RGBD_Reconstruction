@@ -1,0 +1,131 @@
+cmake_minimum_required(VERSION 2.8)
+project(SIFT_SLAM2)
+
+IF(NOT CMAKE_BUILD_TYPE)
+#  SET(CMAKE_BUILD_TYPE Release)
+ENDIF()
+
+#MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -W0 -MT -bigobj")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W0 -MT -bigobj")
+SET(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/bin" CACHE STRING "installation path")
+# Check C++11 or C++0x support
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+SET(DBUILD_SHARED true)
+
+if(COMPILER_SUPPORTS_CXX11)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+   add_definitions(-DCOMPILEDWITHC11)
+   message(STATUS "Using flag -std=c++11.")
+elseif(COMPILER_SUPPORTS_CXX0X)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+   add_definitions(-DCOMPILEDWITHC0X)
+   message(STATUS "Using flag -std=c++0x.")
+#else()
+#   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+endif()
+
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
+
+#find_package(OpenCV 3.0 QUIET)
+#if(NOT OpenCV_FOUND)
+#   find_package(OpenCV 2.4.3 QUIET)
+#   if(NOT OpenCV_FOUND)
+#      message(FATAL_ERROR "OpenCV > 2.4.3 not found.")
+#   endif()
+#endif()
+
+find_package(OpenCV REQUIRED)
+find_package(Eigen3 REQUIRED)
+#find_package(Pangolin REQUIRED)
+#find_package(Eigen3 3.1.0 REQUIRED)
+#find_package(Pangolin REQUIRED)
+
+include_directories(
+${PROJECT_SOURCE_DIR}
+${PROJECT_SOURCE_DIR}/src
+${EIGEN3_INCLUDE_DIR}
+#${Pangolin_INCLUDE_DIRS}
+#${PROJECT_SOURCE_DIR}/Thirdparty/Pangolin/include
+)
+
+#set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+#ADD_LIBRARY(SIFT_SLAM2 SHARED ${LIB_SRC})
+add_library(SIFT_SLAM2 SHARED ${LIB_SRC}
+#include/Converter
+src/helper.h
+src/common.h
+src/Converter.h
+src/Converter.cc
+src/Frame.h
+src/Frame.cc
+src/FrameDrawer.h
+src/FrameDrawer.cc
+src/GPU_Siftextractor.h
+src/GPU_Siftextractor.cpp
+src/Initializer.h
+src/Initializer.cc
+src/KeyFrame.h
+src/KeyFrame.cc
+src/KeyFrameDatabase.h
+src/KeyFrameDatabase.cc
+src/LocalMapping.h
+src/LocalMapping.cc
+src/LoopClosing.h
+src/LoopClosing.cc
+src/Map.h
+src/Map.cc
+src/MapDrawer.h
+src/MapDrawer.cc
+src/MapPoint.h
+src/MapPoint.cc
+src/Optimizer.h
+src/Optimizer.cc
+src/ORBVocabulary.h
+src/PnPsolver.h
+src/PnPsolver.cc
+src/SIFTextractor.h
+src/SIFTextractor.cpp
+src/SiftGPU.h
+src/SIFTmatcher.h
+src/SIFTmatcher.cc
+src/Sim3Solver.h
+src/Sim3Solver.cc
+src/System.h
+src/System.cc
+src/Tracking.h
+src/Tracking.cc
+src/Viewer.h
+src/Viewer.cc
+)
+set_target_properties(SIFT_SLAM2 PROPERTIES OUTPUT_NAME "SIFT_SLAM2")
+LINK_DIRECTORIES(
+#${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib
+#${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib
+#${PROJECT_SOURCE_DIR}/Thirdparty/Pangolin/lib
+${PROJECT_SOURCE_DIR}/bin)
+ADD_DEFINITIONS(-DUSE_GPU_SIFT -DSLAM_DLL_EXPORT)
+target_link_libraries(
+SIFT_SLAM2
+${OpenCV_LIBS}
+${EIGEN3_LIBS}
+${Pangolin_LIBRARIES}
+#DBoW2.lib
+#g2o.lib
+#pangolin.lib
+)
+# Build examples
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+
+add_executable(rgbd_reconstruction
+RGB-D/helper.h
+RGB-D/main.cpp
+)
+ADD_DEFINITIONS(-DUSE_GPU_SIFT=off -DSLAM_DLL_EXPORT=off)
+target_link_libraries(rgbd_reconstruction ${PROJECT_NAME})
+
